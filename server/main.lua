@@ -253,3 +253,23 @@ RegisterNetEvent(
         TriggerClientEvent("az_train:removeBomb", -1, position)
     end
 )
+
+-- New code for handling train door animations and interactions
+
+RegisterNetEvent('Train:opendoor')
+AddEventHandler('Train:opendoor', function(direction, train, carrige, serverid)
+    if direction then
+        TriggerClientEvent('Train:opendoor', -1, direction, train, carrige, serverid)
+    else
+        TriggerClientEvent('Train:opendoor', -1, direction, train, carrige, serverid)
+    end
+end)
+
+RegisterNetEvent('Train:closeDoor')
+AddEventHandler('Train:closeDoor', function(direction, train, carrige, serverid)
+    if direction then
+        TriggerClientEvent('Train:closeDoor', -1, direction, train, carrige, serverid)
+    else
+        TriggerClientEvent('Train:closeDoor', -1, direction, train, carrige, serverid)
+    end
+end)

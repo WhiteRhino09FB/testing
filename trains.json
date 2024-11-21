@@ -1,1 +1,1 @@
-[{"station":1,"maxSpeed":27,"price":1,"label":"Cargo Train","trainindex":20,"uniqueID":1,"storage":30000,"owner":"char1:53effeb2a33e691ab9d07f5508e47151bec37d02","state":"out"}]
+[{"storage":30000,"trainindex":20,"uniqueID":1,"maxSpeed":27,"station":1,"price":1,"label":"Cargo Train","owner":"char1:53effeb2a33e691ab9d07f5508e47151bec37d02","state":"in"},{"storage":30000,"trainindex":27,"uniqueID":2,"maxSpeed":27,"station":1,"price":1,"label":"Metro Train","owner":"char1:53effeb2a33e691ab9d07f5508e47151bec37d02","state":"in"}]

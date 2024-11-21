@@ -584,3 +584,86 @@ function registerCarriageTargets(tempTrain, uniqueID, storage)
         })
     end
 end
+
+-- 
+local currentTrain = nil -- Variable to store the current train
+
+local function handleDoorAnimation(currentTrain, carriage, doorIndices, opening)
+    local doorstate = opening and 0.0 or 1.0
+    local step = opening and 0.01 or -0.01
+    local waitTime = opening and 1 or 2
+
+    while (opening and doorstate <= 1.0) or (not opening and doorstate >= 0.0) do
+        for _, index in ipairs(doorIndices) do
+            SetTrainDoorOpenRatio(currentTrain, index, doorstate)
+            SetTrainDoorOpenRatio(carriage, index, doorstate)
+        end
+        doorstate = doorstate + step
+        Citizen.Wait(waitTime)
+    end
+end
+
+Citizen.CreateThread(function()
+    SetTrainsForceDoorsOpen(0)
+    while true do
+        Citizen.Wait(0)
+        if IsPedInAnyVehicle(PlayerPedId(), true) then
+            currentTrain = GetVehiclePedIsIn(PlayerPedId(), false) -- Get the current train the player is in
+            if currentTrain then
+                local carriage = GetTrainCarriage(currentTrain, 1)
+                local serverId = GetPlayerServerId(PlayerId())
+
+                if IsControlJustReleased(0, 108) then
+                    local doorstate = GetTrainDoorOpenRatio(currentTrain, 0)
+                    local opening = doorstate <= 0.05
+                    TriggerServerEvent('Train:' .. (opening and 'opendoor' or 'closeDoor'), 1, NetworkGetNetworkIdFromEntity(currentTrain), NetworkGetNetworkIdFromEntity(carriage), serverId)
+                    handleDoorAnimation(currentTrain, carriage, {0, 2}, opening)
+                elseif IsControlJustReleased(0, 109) then
+                    local doorstate = GetTrainDoorOpenRatio(currentTrain, 1)
+                    local opening = doorstate <= 0.05
+                    TriggerServerEvent('Train:' .. (opening and 'opendoor' or 'closeDoor'), 0, NetworkGetNetworkIdFromEntity(currentTrain), NetworkGetNetworkIdFromEntity(carriage), serverId)
+                    handleDoorAnimation(currentTrain, carriage, {1, 3}, opening)
+                    if opening then
+                        SetVehicleDoorOpen(currentTrain, 1, false, false)
+                        SetVehicleDoorOpen(currentTrain, 3, false, false)
+                        SetVehicleDoorOpen(carriage, 0, false, false)
+                        SetVehicleDoorOpen(carriage, 2, false, false)
+                    else
+                        SetVehicleDoorShut(currentTrain, 1, false)
+                        SetVehicleDoorShut(currentTrain, 3, false)
+                        SetVehicleDoorShut(carriage, 0, false)
+                        SetVehicleDoorShut(carriage, 2, false)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+RegisterNetEvent('Train:opendoor')
+AddEventHandler('Train:opendoor', function(direction, trainNetworkId, carriageNetworkId, serverId)
+    if not NetworkDoesEntityExistWithNetworkId(trainNetworkId) or not NetworkDoesEntityExistWithNetworkId(carriageNetworkId) then
+        print("No such entity: train or carriage does not exist")
+        return
+    end
+    if serverId == GetPlayerServerId(PlayerId()) then
+        return
+    end
+    local train = NetworkGetEntityFromNetworkId(trainNetworkId)
+    local carriage = NetworkGetEntityFromNetworkId(carriageNetworkId)
+    handleDoorAnimation(train, carriage, direction == 1 and {0, 2} or {1, 3}, true)
+end)
+
+RegisterNetEvent('Train:closeDoor')
+AddEventHandler('Train:closeDoor', function(direction, trainNetworkId, carriageNetworkId, serverId)
+    if not NetworkDoesEntityExistWithNetworkId(trainNetworkId) or not NetworkDoesEntityExistWithNetworkId(carriageNetworkId) then
+        print("No such entity: train or carriage does not exist")
+        return
+    end
+    if serverId == GetPlayerServerId(PlayerId()) then
+        return
+    end
+    local train = NetworkGetEntityFromNetworkId(trainNetworkId)
+    local carriage = NetworkGetEntityFromNetworkId(carriageNetworkId)
+    handleDoorAnimation(train, carriage, direction == 1 and {0, 2} or {1, 3}, false)
+end)
